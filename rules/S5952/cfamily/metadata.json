@@ -3,7 +3,7 @@
   "type": "CODE_SMELL",
   "status": "ready",
   "remediation": {
-    "func": "Constant\/Issue",
+    "func": "Constant/Issue",
     "constantCost": "5min"
   },
   "tags": [
@@ -12,12 +12,8 @@
     "clumsy"
   ],
   "extra": {
-    "replacementRules": [
-
-    ],
-    "legacyKeys": [
-
-    ]
+    "replacementRules": [],
+    "legacyKeys": []
   },
   "defaultSeverity": "Minor",
   "ruleSpecification": "RSPEC-5952",
@@ -27,5 +23,5 @@
     "Sonar way",
     "MISRA C++ 2008 recommended"
   ],
-  "quickfix": "covered"
+  "quickfix": "unknown"
 }
