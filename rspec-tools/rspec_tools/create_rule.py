@@ -180,7 +180,6 @@ class RuleCreator:
     metadata = json.loads(file.read_text())
     metadata['quickfix'] = status
     file.write_text(json.dumps(metadata, indent=2))
-    pass
 
   def _fill_in_the_blanks_in_the_template(self, rule_dir: Path, rule_number: int):
     for rule_item in rule_dir.glob('**/*'):
