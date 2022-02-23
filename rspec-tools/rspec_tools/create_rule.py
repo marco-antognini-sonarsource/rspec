@@ -1,4 +1,5 @@
 import json
+import os
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
@@ -18,11 +19,12 @@ from rspec_tools.utils import (LANG_TO_SOURCE, copy_directory_content,
 
 
 def build_github_repository_url(token: str, user: Optional[str]):
-  'Builds the rspec repository url'
+  '''Builds the rspec repository url'''
+  repo = os.environ.get('GITHUB_REPOSITORY', 'SonarSource/rspec')
   if user:
-    return f'https://{user}:{token}@github.com/SonarSource/rspec.git'
+    return f'https://{user}:{token}@github.com/{repo}.git'
   else:
-    return f'https://{token}@github.com/SonarSource/rspec.git'
+    return f'https://{token}@github.com/{repo}.git'
 
 def extract_repository_name(url):
   url_end = url.split('/')[-2:]
