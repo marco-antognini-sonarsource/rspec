@@ -1,3 +1,4 @@
+import json
 from git import Repo, Head
 from rspec_tools.errors import InvalidArgumentError
 from pathlib import Path
@@ -79,6 +80,27 @@ def read_counter_file(repo):
   repo.git.checkout(RuleCreator.ID_COUNTER_BRANCH)
   counter_path = Path(repo.working_dir).joinpath(RuleCreator.ID_COUNTER_FILENAME)
   return counter_path.read_text()
+
+
+def test_update_quickfix_status_branch(rule_creator: RuleCreator, mock_rspec_repo: Repo):
+  '''Test update_quickfix_status_branch'''
+  rule_number = '100'
+  language = 'cfamily'
+  status = 'covered'
+
+  metadata_path = Path(mock_rspec_repo.working_dir, 'rules', f'S{rule_number}', language, 'metadata.json')
+  mock_rspec_repo.git.checkout('master')
+  initial_metadata = json.loads(metadata_path.read_text())
+  assert status != initial_metadata.get('quickfix', 'unknown')
+
+  branch = rule_creator.update_quickfix_status_branch('Some title', rule_number, language, status)
+  mock_rspec_repo.git.checkout(branch)
+  new_metadata = json.loads(metadata_path.read_text())
+  for key in initial_metadata:
+    if key == 'quickfix':
+      assert status == new_metadata.get('quickfix', 'unknown')
+    else:
+      assert initial_metadata[key] == new_metadata[key]
 
 
 def test_create_new_multi_lang_rule_branch(rule_creator: RuleCreator, mock_rspec_repo: Repo):
