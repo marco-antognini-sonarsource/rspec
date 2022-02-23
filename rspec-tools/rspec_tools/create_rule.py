@@ -179,7 +179,7 @@ class RuleCreator:
   def _update_quickfix_status(self, file: Path, status: str):
     metadata = json.loads(file.read_text())
     metadata['quickfix'] = status
-    file.write_text(json.dumps(metadata))
+    file.write_text(json.dumps(metadata, indent=2))
     pass
 
   def _fill_in_the_blanks_in_the_template(self, rule_dir: Path, rule_number: int):
