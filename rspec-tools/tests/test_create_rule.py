@@ -8,7 +8,7 @@ import pytest
 import shutil
 import os
 
-from rspec_tools.create_rule import RuleCreator, create_new_rule, add_language_to_rule
+from rspec_tools.create_rule import RuleCreator, create_new_rule, add_language_to_rule, update_rule_quickfix_status
 from rspec_tools.utils import is_empty_metadata, LANG_TO_SOURCE
 
 @pytest.fixture
@@ -101,6 +101,36 @@ def test_update_quickfix_status_branch(rule_creator: RuleCreator, mock_rspec_rep
       assert status == new_metadata.get('quickfix', 'unknown')
     else:
       assert initial_metadata[key] == new_metadata[key]
+
+
+def test_update_quickfix_status_pull_request(rule_creator: RuleCreator):
+  '''Test update_quickfix_status_pull_request adds the right user and label.'''
+  ghMock = Mock()
+  ghRepoMock = Mock()
+  pullMock = Mock()
+  ghRepoMock.create_pull = Mock(return_value=pullMock)
+  ghMock.get_repo = Mock(return_value=ghRepoMock)
+  def mockGithub(user: Optional[str]):
+    return ghMock
+
+  rule_creator.update_quickfix_status_pull_request(mockGithub, 100, 'cfamily', 'covered', 'label-fraicheur', 'testuser')
+  ghRepoMock.create_pull.assert_called_once();
+  assert ghRepoMock.create_pull.call_args.kwargs['title'].startswith('Modify rule S100')
+  pullMock.add_to_assignees.assert_called_with('testuser')
+  pullMock.add_to_labels.assert_called_with('label-fraicheur')
+
+
+@patch('rspec_tools.create_rule.RuleCreator')
+def test_update_rule_quickfix_status(mockRuleCreator):
+  mockRuleCreator.return_value = Mock()
+  mockRuleCreator.return_value.update_quickfix_status_pull_request = Mock()
+  prMock = mockRuleCreator.return_value.update_quickfix_status_pull_request
+  update_rule_quickfix_status('cfamily', 'S100', 'covered', 'my token', 'testuser')
+  prMock.assert_called_once()
+  assert prMock.call_args.args[1] == 100
+  assert prMock.call_args.args[2] == 'cfamily'
+  assert prMock.call_args.args[3] == 'covered'
+  assert prMock.call_args.args[4] == 'cfamily'
 
 
 def test_create_new_multi_lang_rule_branch(rule_creator: RuleCreator, mock_rspec_repo: Repo):
