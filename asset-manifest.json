@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/rspec/static/css/main.871f1b0f.css",
+    "main.js": "/rspec/static/js/main.af5d012c.js",
+    "index.html": "/rspec/index.html",
+    "main.871f1b0f.css.map": "/rspec/static/css/main.871f1b0f.css.map",
+    "main.af5d012c.js.map": "/rspec/static/js/main.af5d012c.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.871f1b0f.css",
+    "static/js/main.af5d012c.js"
+  ]
+}

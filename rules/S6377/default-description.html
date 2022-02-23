@@ -1,0 +1,83 @@
+<div class="sect1">
+<h2 id="_description">Description</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>XML document can be signed to ensure data integrity and authentication. The signature should be verified and validated to make sure it&#8217;s secure. For instance, signatures based on weak cipher algorithms like MD5 should be rejected, and an XML document should not contain hostile constructs that can lead to Denial of Services attacks, like a large number of <code>SignedInfo</code> elements.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_noncompliant_code_example">Noncompliant Code Example</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The Java XML Digital Signature API doesn&#8217;t use a strong signature validation mode by default:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">DOMValidateContext valContext = new DOMValidateContext(new KeyValueKeySelector(), nl.item(0)); // Noncompliant</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_compliant_solution">Compliant Solution</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The Java XML Digital Signature API offers a secure validation mode to protect against various <a href="https://docs.oracle.com/en/java/javase/14/security/java-xml-digital-signature-api-overview-and-tutorial.html#GUID-8618C294-3BFE-45C3-9A1E-C4629E337E68">security issues</a>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-java" data-lang="java">DOMValidateContext valContext = new DOMValidateContext(new KeyValueKeySelector(), nl.item(0));
+valContext.setProperty("org.jcp.xml.dsig.secureValidation", Boolean.TRUE);</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see">See</h2>
+<div class="sectionbody">
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://docs.oracle.com/en/java/javase/14/security/java-xml-digital-signature-api-overview-and-tutorial.html#GUID-DB46A001-6DBD-4571-BDBC-1BBC394BF61E">Oracle Java Documentation</a> - XML Digital Signature API Overview and Tutorial</p>
+</li>
+<li>
+<p><a href="https://owasp.org/www-project-top-ten/2017/A3_2017-Sensitive_Data_Exposure">OWASP Top 10 2017 Category A3</a> - Sensitive Data Exposure</p>
+</li>
+<li>
+<p><a href="http://cwe.mitre.org/data/definitions/347.html">MITRE, CWE-347</a> - Improper Verification of Cryptographic Signature</p>
+</li>
+</ul>
+</div>
+<hr>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_implementation_specification">Implementation Specification</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>(visible only on this page)</p>
+</div>
+<div class="sect2">
+<h3 id="_message">Message</h3>
+<div class="paragraph">
+<p>Use the secure validation mode when validating this XML signature.</p>
+</div>
+<hr>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_comments_and_links">Comments And Links</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>(visible only on this page)</p>
+</div>
+<div class="sect2">
+<h3 id="_on_25_jan_2022_103400_quentin_jaquier_wrote">on 25 Jan 2022, 10:34:00 Quentin Jaquier wrote:</h3>
+<div class="paragraph">
+<p>Quick fixes (for Java): even if it is technically possible to provide a fix that would result in compliant code, it does not sound wise to set properties blindly, as it can have side effects. Fixing the issue requires a careful and good understanding of the overall context of the code.</p>
+</div>
+</div>
+</div>
+</div>
