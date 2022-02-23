@@ -1,3 +1,4 @@
+import json
 import tempfile
 from contextlib import contextmanager
 from pathlib import Path
@@ -67,6 +68,12 @@ def add_language_to_rule(language: str, rule: str, token: str, user: Optional[st
   rule_number = resolve_rule(rule)
   with _rule_creator(token, user) as rule_creator:
     rule_creator.add_language_pull_request(auto_github(token), rule_number, language, label, user=user)
+
+def update_rule_quickfix_status(language: str, rule: str, status: str, token: str, user: Optional[str]):
+  label = _get_valid_label_for_language(language)
+  rule_number = resolve_rule(rule)
+  with _rule_creator(token, user) as rule_creator:
+    rule_creator.update_quickfix_status_pull_request(auto_github(token), rule_number, language, status, label, user)
 
 class RuleCreator:
   ''' Create a new Rule in a repository following the official Github 'rspec' repository structure.'''
@@ -153,6 +160,26 @@ class RuleCreator:
     self.repository.git.push('origin', branch_name)
     return branch_name
 
+  def update_quickfix_status_branch(self, title: str, rule_number: int, language: str, status: str) -> str:
+    '''Update the given rule/language quick fix metadata field.'''
+    branch_name = f'rule/S{rule_number}-{language}-quickfix'
+    with self._current_git_branch(self.MASTER_BRANCH, branch_name):
+      metadata_path = Path(self.repository.working_dir, 'rules', f'S{rule_number}', language, 'metadata.json')
+      if not metadata_path.is_file():
+        raise InvalidArgumentError(f'{metadata_path} does not exist or is not a file')
+
+      self._update_quickfix_status(metadata_path, status)
+      self.repository.git.add('--all')
+      self.repository.index.commit(title)
+    self.repository.git.push('origin', branch_name)
+    return branch_name
+
+  def _update_quickfix_status(self, file: Path, status: str):
+    metadata = json.loads(file.read_text())
+    metadata['quickfix'] = status
+    file.write_text(json.dumps(metadata))
+    pass
+
   def _fill_in_the_blanks_in_the_template(self, rule_dir: Path, rule_number: int):
     for rule_item in rule_dir.glob('**/*'):
       if rule_item.is_file():
@@ -234,6 +261,19 @@ class RuleCreator:
       f'Create rule S{rule_number}',
       f'You can preview this rule [here](https://sonarsource.github.io/rspec/#/rspec/S{rule_number}/{first_lang}) (updated a few minutes after each push).',
       labels,
+      user
+    )
+
+  def update_quickfix_status_pull_request(self, github_api: Callable[[Optional[str]], Github], rule_number: int, language: str, status: str, label: str, user: Optional[str]):
+    title = f'Modify rule S{rule_number}: mark quick fix as "{status}"'
+    branch_name = self.update_quickfix_status_branch(title, rule_number, language, status)
+    click.echo(f'Created rule branch {branch_name}')
+    return self._create_pull_request(
+      github_api,
+      branch_name,
+      title,
+      f'You can preview this rule [here](https://sonarsource.github.io/rspec/#/rspec/S{rule_number}/{language}) (updated a few minutes after each push).',
+      [label],
       user
     )
 
