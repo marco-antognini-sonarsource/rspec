@@ -1,17 +1,20 @@
-from rspec_tools.errors import InvalidArgumentError
-import click
 import tempfile
-import fs
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Callable, Final, Iterable, Optional
+
+import click
 from git import Repo
-from git.remote import PushInfo
 from github import Github
 from github.PullRequest import PullRequest
-from pathlib import Path
-from typing import Final, Iterable, Optional, Callable
-from contextlib import contextmanager
-from rspec_tools.utils import parse_and_validate_language_list, get_labels_for_languages, validate_language, get_label_for_language, resolve_rule, swap_metadata_files, is_empty_metadata
 
-from rspec_tools.utils import copy_directory_content, LANG_TO_SOURCE
+from rspec_tools.errors import InvalidArgumentError
+from rspec_tools.utils import (LANG_TO_SOURCE, copy_directory_content,
+                               get_label_for_language,
+                               get_labels_for_languages, is_empty_metadata,
+                               parse_and_validate_language_list, resolve_rule,
+                               swap_metadata_files, validate_language)
+
 
 def build_github_repository_url(token: str, user: Optional[str]):
   'Builds the rspec repository url'
@@ -32,31 +35,37 @@ def auto_github(token: str) -> Callable[[Optional[str]], Github]:
       return Github(token)
   return ret
 
-def create_new_rule(languages: str, token: str, user: Optional[str]):
+def _get_url_and_config(token: str, user: Optional[str]):
   url = build_github_repository_url(token, user)
   config = {}
   if user:
     config['user.name'] = user
     config['user.email'] = f'{user}@users.noreply.github.com'
-  lang_list = parse_and_validate_language_list(languages)
-  label_list = get_labels_for_languages(lang_list)
 
+  return url, config
+
+def _get_valid_label_for_language(language: str):
+  validate_language(language)
+  return get_label_for_language(language)
+
+@contextmanager
+def _rule_creator(token: str, user: Optional[str]):
+  url, config = _get_url_and_config(token, user)
   with tempfile.TemporaryDirectory() as tmpdirname:
     rule_creator = RuleCreator(url, tmpdirname, config)
+    yield rule_creator
+
+def create_new_rule(languages: str, token: str, user: Optional[str]):
+  lang_list = parse_and_validate_language_list(languages)
+  label_list = get_labels_for_languages(lang_list)
+  with _rule_creator(token, user) as rule_creator:
     rule_number = rule_creator.reserve_rule_number()
     rule_creator.create_new_rule_pull_request(auto_github(token), rule_number, lang_list, label_list, user=user)
 
 def add_language_to_rule(language: str, rule: str, token: str, user: Optional[str]):
-  url = build_github_repository_url(token, user)
-  config = {}
-  if user:
-    config['user.name'] = user
-    config['user.email'] = f'{user}@users.noreply.github.com'
-  validate_language(language)
-  label = get_label_for_language(language)
+  label = _get_valid_label_for_language(language)
   rule_number = resolve_rule(rule)
-  with tempfile.TemporaryDirectory() as tmpdirname:
-    rule_creator = RuleCreator(url, tmpdirname, config)
+  with _rule_creator(token, user) as rule_creator:
     rule_creator.add_language_pull_request(auto_github(token), rule_number, language, label, user=user)
 
 class RuleCreator:
