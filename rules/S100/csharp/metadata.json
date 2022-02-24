@@ -1,6 +1,5 @@
 {
   "title": "Methods and properties should be named in PascalCase",
-  "defaultQualityProfiles": [
-    
-  ]
+  "defaultQualityProfiles": [],
+  "quickfix": "unknown"
 }
